@@ -5,8 +5,8 @@ namespace GraysDocsBlocks\Functions;
 // SIBLING NAVIGATION BLOCKS.
 
 function render_page_sibling_navigation_block( $attributes ) {
-	$use_page_order         = isset( $attributes['usePageOrder'] ) ? $attributes['usePageOrder'] : false;
-	$navigation_type        = isset( $attributes['navigationType'] ) ? $attributes['navigationType'] : 'both';
+	$use_page_order		 = isset( $attributes['usePageOrder'] ) ? $attributes['usePageOrder'] : false;
+	$navigation_type		= isset( $attributes['navigationType'] ) ? $attributes['navigationType'] : 'both';
 	$use_parent_as_previous = isset( $attributes['useParentAsPrevious'] ) ? $attributes['useParentAsPrevious'] : false;
 	$use_next_topic_as_next = isset( $attributes['useNextTopicAsNext'] ) ? $attributes['useNextTopicAsNext'] : false;
 
@@ -23,7 +23,7 @@ function render_page_sibling_navigation_block( $attributes ) {
 
 	$siblings = get_pages(
 		array(
-			'child_of'    => $parent_id,
+			'child_of'	=> $parent_id,
 			'sort_column' => $use_page_order ? 'menu_order' : 'post_date',
 			'sort_order'  => 'ASC',
 		)
@@ -50,7 +50,7 @@ function render_page_sibling_navigation_block( $attributes ) {
 			$prev_page = $siblings[ $prev_index ];
 			$output  .= sprintf(
 				'<a class="wayfinding nav-previous" href="%s">
-					<i class="fa-solid fa-angles-left"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 512 512"><path d="M47 239c-9.4 9.4-9.4 24.6 0 33.9L207 433c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L97.9 256 241 113c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L47 239zM399 79L239 239c-9.4 9.4-9.4 24.6 0 33.9L399 433c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-143-143L433 113c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0z"/></svg>
 					<span class="words">
 						<span class="meta-nav">Previous Article</span>
 						<span class="adjacent-sibling-page-title">%s</span>
@@ -63,7 +63,7 @@ function render_page_sibling_navigation_block( $attributes ) {
 			$parent_page = get_post( $parent_id );
 			$output	 .= sprintf(
 				'<a class="wayfinding nav-previous" href="%s">
-					<i class="fa-solid fa-angles-left"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 512 512"><path d="M47 239c-9.4 9.4-9.4 24.6 0 33.9L207 433c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L97.9 256 241 113c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L47 239zM399 79L239 239c-9.4 9.4-9.4 24.6 0 33.9L399 433c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-143-143L433 113c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0z"/></svg>
 					<span class="words">
 						<span class="meta-nav">Parent Topic</span>
 						<span class="adjacent-sibling-page-title">%s</span>
@@ -76,9 +76,9 @@ function render_page_sibling_navigation_block( $attributes ) {
 	}
 
 if ( 'both' === $navigation_type || 'next' === $navigation_type ) {
-    $next_index = $current_index + 1;
+	$next_index = $current_index + 1;
 
-    if ( $next_index < count( $siblings ) ) {
+	if ( $next_index < count( $siblings ) ) {
 		$next_page = $siblings[ $next_index ];
 		$output   .= sprintf(
 			'<a class="wayfinding nav-next" href="%s">
@@ -86,32 +86,32 @@ if ( 'both' === $navigation_type || 'next' === $navigation_type ) {
 					<span class="meta-nav">Next Article</span>
 					<span class="adjacent-sibling-page-title">%s</span>
 				</span>
-				<i class="fa-solid fa-angles-right"></i>
+				<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 512 512"><!--!Font Awesome Pro 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2024 Fonticons, Inc.--><path d="M113 433L273 273c9.4-9.4 9.4-24.6 0-33.9L113 79c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l143 143L79 399c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0zm192 0L465 273c9.4-9.4 9.4-24.6 0-33.9L305 79c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l143 143L271 399c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0z"/></svg>
 			</a>',
 			get_permalink( $next_page ),
 			esc_html( $next_page->post_title )
 		);
-    } elseif ( $use_next_topic_as_next ) {
-        $next_parent_sibling_id = get_next_parent_sibling_id( $current_page->ID );
+	} elseif ( $use_next_topic_as_next ) {
+		$next_parent_sibling_id = get_next_parent_sibling_id( $current_page->ID );
 
-        if ( $next_parent_sibling_id ) {
-            $next_topic = get_post( $next_parent_sibling_id );
-            $output    .= sprintf(
-                '<a class="wayfinding nav-next" href="%s">
-                    <span class="words">
-                        <span class="meta-nav">Next Topic</span>
-                        <span class="adjacent-sibling-page-title">%s</span>
-                    </span>
-                    <i class="fa-solid fa-angles-right"></i>
-                </a>',
-                get_permalink( $next_topic ),
-                esc_html( $next_topic->post_title )
-            );
-        } else {
-            // Debugging: Log if no next topic is found.
-            error_log( 'No next topic found.' );
-        }
-    }
+		if ( $next_parent_sibling_id ) {
+			$next_topic = get_post( $next_parent_sibling_id );
+			$output	.= sprintf(
+				'<a class="wayfinding nav-next" href="%s">
+					<span class="words">
+						<span class="meta-nav">Next Topic</span>
+						<span class="adjacent-sibling-page-title">%s</span>
+					</span>
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 512 512"><!--!Font Awesome Pro 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2024 Fonticons, Inc.--><path d="M113 433L273 273c9.4-9.4 9.4-24.6 0-33.9L113 79c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l143 143L79 399c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0zm192 0L465 273c9.4-9.4 9.4-24.6 0-33.9L305 79c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l143 143L271 399c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0z"/></svg>
+				</a>',
+				get_permalink( $next_topic ),
+				esc_html( $next_topic->post_title )
+			);
+		} else {
+			// Debugging: Log if no next topic is found.
+			error_log( 'No next topic found.' );
+		}
+	}
 }
 
 	$output .= '</div></nav>';
