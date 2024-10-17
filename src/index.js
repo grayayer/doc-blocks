@@ -158,15 +158,100 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
             return select( 'core/editor' ).getCurrentPostId();
         }, [] );
 
-        const parentId = useSelect( ( select ) => {
+        const { parentId, siblings, currentPageIndex } = useSelect( ( select ) => {
             const page = select( 'core/editor' ).getCurrentPost();
-            return page ? page.parent : 0;
+            const parentId = page ? page.parent : 0;
+            const allPages = select( 'core' ).getEntityRecords( 'postType', 'page', { per_page: -1 } ) || [];
+            const siblings = allPages.filter( p => p.parent === parentId );
+            const currentPageIndex = siblings.findIndex( p => p.id === currentPageId );
+            return { parentId, siblings, currentPageIndex };
         }, [] );
 
-        console.log( 'useNextTopicAsNext:', attributes.useNextTopicAsNext );
+        const renderNavigation = () => {
+            if ( currentPageIndex === -1 ) {
+                return <p>{ __( 'Unable to determine page position.' ) }</p>;
+            }
+
+            const prevSibling = siblings[currentPageIndex - 1];
+            const nextSibling = siblings[currentPageIndex + 1];
+
+            const hasPrevious = attributes.navigationType !== 'next' && (prevSibling || (attributes.useParentAsPrevious && parentId));
+            const hasNext = attributes.navigationType !== 'previous' && (nextSibling || attributes.useNextTopicAsNext);
+
+            return (
+                <nav className={`sibling-navigation-preview ${hasPrevious && hasNext ? 'has-both' : hasNext ? 'has-only-next' : ''}`}>
+                    {hasPrevious && (
+                        <a className="nav-previous wayfinding">
+                            <i>←</i>
+                            <div className="words">
+                                <span className="meta-nav">Previous</span>
+                                <span className="adjacent-sibling-page-title">
+                                    {prevSibling ? prevSibling.title.rendered : 'Parent Page'}
+                                </span>
+                            </div>
+                        </a>
+                    )}
+                    {hasNext && (
+                        <a className="nav-next wayfinding">
+                            <div className="words">
+                                <span className="meta-nav">Next</span>
+                                <span className="adjacent-sibling-page-title">
+                                    {nextSibling ? nextSibling.title.rendered : 'Next Topic'}
+                                </span>
+                            </div>
+                            <i>→</i>
+                        </a>
+                    )}
+                </nav>
+            );
+        };
 
         return (
             <div { ...blockProps }>
+                <style>
+                    {`
+                        .sibling-navigation-preview {
+                            display: flex;
+                            justify-content: space-between;
+                            border-top: 1px solid rgba(38, 74, 69, 0.5);
+                            padding-top: 1rem;
+                        }
+                        .sibling-navigation-preview.has-only-next {
+                            justify-content: flex-end;
+                        }
+                        .sibling-navigation-preview a {
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            column-gap: 1rem;
+                            text-decoration: none;
+                            max-width: 45%;
+                        }
+                        .sibling-navigation-preview a i {
+                            font-size: 1.5rem;
+                            transition: 100ms all ease-in-out;
+                        }
+                        .sibling-navigation-preview a .words {
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        .sibling-navigation-preview a:hover span.meta-nav {
+                            color: #E0A315;
+                        }
+                        .sibling-navigation-preview a .adjacent-sibling-page-title {
+                            transition: 100ms all ease-in-out;
+                        }
+                        .sibling-navigation-preview span.meta-nav {
+                            text-transform: uppercase;
+                            font-size: 0.9rem;
+                            color: #333;
+                            transition: 300ms all ease-in-out;
+                        }
+                        .sibling-navigation-preview .nav-next {
+                            text-align: right;
+                        }
+                    `}
+                </style>
                 <InspectorControls>
                     <PanelBody title={ __( 'Navigation Settings' ) }>
                         <ToggleControl
@@ -199,11 +284,11 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
                     </PanelBody>
                 </InspectorControls>
                 <div className="wp-block-page-sibling-navigation">
-                    { parentId ? (
-                        <p>{ __( 'Sibling navigation will be displayed here.' ) }</p>
+                    {parentId ? (
+                        renderNavigation()
                     ) : (
                         <p>{ __( 'This page has no parent. Sibling navigation is not applicable.' ) }</p>
-                    ) }
+                    )}
                 </div>
             </div>
         );
