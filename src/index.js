@@ -186,11 +186,11 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
         )?.color || '#E0A315'; // Fallback to previous color if not found
 
         const renderNavigation = () => {
-            if (isLoading) {
+            if ( isLoading ) {
                 return <p>{ __( 'Loading sibling navigation...' ) }</p>;
             }
 
-            if (!siblings || siblings.length === 0 || currentPageIndex === -1) {
+            if ( !siblings || siblings.length === 0 || currentPageIndex === -1 ) {
                 return <p>{ __( 'No sibling pages found.' ) }</p>;
             }
 
@@ -272,6 +272,11 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
                         .sibling-navigation-preview .nav-next {
                             text-align: right;
                         }
+                        .no-parent-message {
+                            color: #999999;
+                            display: flex;
+                            align-items: center;
+                        }
                     `}
                 </style>
                 <InspectorControls>
@@ -309,9 +314,9 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
                     {parentId ? (
                         renderNavigation()
                     ) : (
-                        <p style={{ color: '#999999' }}>
+                        <p class="no-parent-message">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style={{ width: '1em', height: '1em', marginRight: '0.5em', verticalAlign: 'middle', fill: '#999999' }}>
-                                <path d="M256 32a224 224 0 1 1 0 448 224 224 0 1 1 0-448zm0 480A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM192 352l0 32 16 0 96 0 16 0 0-32-16 0-32 0 0-112 0-16-16 0-40 0-16 0 0 32 16 0 24 0 0 96-32 0-16 0zm88-168l0-48-48 0 0 48 48 0z"/>
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0-24 0 0-48 24 0 48 0 24 0 0 24 0 88 8 0 24 0 0 48-24 0-80 0-24 0 0-48 24 0zm72-144l-64 0 0-64 64 0 0 64z"/>
                             </svg>
                             <em>{ __( 'This page has no parent so the Sibling Navigation block is not applicable.' ) }</em>
                         </p>
