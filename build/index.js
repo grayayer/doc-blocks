@@ -145,6 +145,7 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
     }
   },
   edit: function edit(props) {
+    var _colors$find;
     var attributes = props.attributes,
       setAttributes = props.setAttributes;
     var blockProps = useBlockProps();
@@ -156,7 +157,20 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
         var parentId = page ? page.parent : 0;
         var allPages = select('core').getEntityRecords('postType', 'page', {
           per_page: -1
-        }) || [];
+        });
+
+        // Check if pages are still loading
+        var isLoading = select('core').isResolving('getEntityRecords', ['postType', 'page', {
+          per_page: -1
+        }]);
+        if (isLoading || !allPages) {
+          return {
+            parentId: parentId,
+            siblings: null,
+            currentPageIndex: -1,
+            isLoading: isLoading
+          };
+        }
         var siblings = allPages.filter(function (p) {
           return p.parent === parentId;
         });
@@ -166,15 +180,32 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
         return {
           parentId: parentId,
           siblings: siblings,
-          currentPageIndex: currentPageIndex
+          currentPageIndex: currentPageIndex,
+          isLoading: isLoading
         };
       }, []),
       parentId = _useSelect.parentId,
       siblings = _useSelect.siblings,
-      currentPageIndex = _useSelect.currentPageIndex;
+      currentPageIndex = _useSelect.currentPageIndex,
+      isLoading = _useSelect.isLoading;
+
+    // Get the theme's color palette
+    var _useSelect2 = useSelect(function (select) {
+        return select('core/block-editor').getSettings();
+      }, []),
+      colors = _useSelect2.colors;
+
+    // Find a suitable highlight color from the theme's palette
+    var highlightColor = ((_colors$find = colors.find(function (color) {
+      return color.slug === 'highlight' || color.slug === 'accent';
+    })) === null || _colors$find === void 0 ? void 0 : _colors$find.color) || '#E0A315'; // Fallback to previous color if not found
+
     var renderNavigation = function renderNavigation() {
-      if (currentPageIndex === -1) {
-        return /*#__PURE__*/React.createElement("p", null, __('Unable to determine page position.'));
+      if (isLoading) {
+        return /*#__PURE__*/React.createElement("p", null, __('Loading sibling navigation...'));
+      }
+      if (!siblings || siblings.length === 0 || currentPageIndex === -1) {
+        return /*#__PURE__*/React.createElement("p", null, __('No sibling pages found.'));
       }
       var prevSibling = siblings[currentPageIndex - 1];
       var nextSibling = siblings[currentPageIndex + 1];
@@ -200,7 +231,7 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
         className: "adjacent-sibling-page-title"
       }, nextSibling ? nextSibling.title.rendered : 'Next Topic')), /*#__PURE__*/React.createElement("i", null, "\u2192")));
     };
-    return /*#__PURE__*/React.createElement("div", blockProps, /*#__PURE__*/React.createElement("style", null, "\n                        .sibling-navigation-preview {\n                            display: flex;\n                            justify-content: space-between;\n                            border-top: 1px solid rgba(38, 74, 69, 0.5);\n                            padding-top: 1rem;\n                        }\n                        .sibling-navigation-preview.has-only-next {\n                            justify-content: flex-end;\n                        }\n                        .sibling-navigation-preview a {\n                            display: flex;\n                            flex-direction: row;\n                            align-items: center;\n                            column-gap: 1rem;\n                            text-decoration: none;\n                            max-width: 45%;\n                        }\n                        .sibling-navigation-preview a i {\n                            font-size: 1.5rem;\n                            transition: 100ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview a .words {\n                            display: flex;\n                            flex-direction: column;\n                        }\n                        .sibling-navigation-preview a:hover span.meta-nav {\n                            color: #E0A315;\n                        }\n                        .sibling-navigation-preview a .adjacent-sibling-page-title {\n                            transition: 100ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview span.meta-nav {\n                            text-transform: uppercase;\n                            font-size: 0.9rem;\n                            color: #333;\n                            transition: 300ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview .nav-next {\n                            text-align: right;\n                        }\n                    "), /*#__PURE__*/React.createElement(InspectorControls, null, /*#__PURE__*/React.createElement(PanelBody, {
+    return /*#__PURE__*/React.createElement("div", blockProps, /*#__PURE__*/React.createElement("style", null, "\n                        .sibling-navigation-preview {\n                            display: flex;\n                            justify-content: space-between;\n                            border-top: 1px solid rgba(38, 74, 69, 0.5);\n                            padding-top: 1rem;\n                        }\n                        .sibling-navigation-preview.has-only-next {\n                            justify-content: flex-end;\n                        }\n                        .sibling-navigation-preview a {\n                            display: flex;\n                            flex-direction: row;\n                            align-items: center;\n                            column-gap: 1rem;\n                            text-decoration: none;\n                            max-width: 45%;\n                        }\n                        .sibling-navigation-preview a i {\n                            font-size: 1.5rem;\n                            transition: 100ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview a .words {\n                            display: flex;\n                            flex-direction: column;\n                        }\n                        .sibling-navigation-preview a:hover span.meta-nav {\n                                color: var(--global-palette-highlight-alt, #E0A315);\n                        }\n                        .sibling-navigation-preview a .adjacent-sibling-page-title {\n                            transition: 100ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview span.meta-nav {\n                            text-transform: uppercase;\n                            font-size: 0.9rem;\n                            color: #333;\n                            transition: 300ms all ease-in-out;\n                        }\n                        .sibling-navigation-preview .nav-next {\n                            text-align: right;\n                        }\n                    "), /*#__PURE__*/React.createElement(InspectorControls, null, /*#__PURE__*/React.createElement(PanelBody, {
       title: __('Navigation Settings')
     }, /*#__PURE__*/React.createElement(ToggleControl, {
       label: __('Use Page Order'),
@@ -248,7 +279,23 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
       }
     }))), /*#__PURE__*/React.createElement("div", {
       className: "wp-block-page-sibling-navigation"
-    }, parentId ? renderNavigation() : /*#__PURE__*/React.createElement("p", null, __('This page has no parent. Sibling navigation is not applicable.'))));
+    }, parentId ? renderNavigation() : /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: '#999999'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      xmlns: "http://www.w3.org/2000/svg",
+      viewBox: "0 0 512 512",
+      style: {
+        width: '1em',
+        height: '1em',
+        marginRight: '0.5em',
+        verticalAlign: 'middle',
+        fill: '#999999'
+      }
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M256 32a224 224 0 1 1 0 448 224 224 0 1 1 0-448zm0 480A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM192 352l0 32 16 0 96 0 16 0 0-32-16 0-32 0 0-112 0-16-16 0-40 0-16 0 0 32 16 0 24 0 0 96-32 0-16 0zm88-168l0-48-48 0 0 48 48 0z"
+    })), /*#__PURE__*/React.createElement("em", null, __('This page has no parent so the Sibling Navigation block is not applicable.')))));
   },
   save: function save() {
     return null; // We'll use PHP to render the block

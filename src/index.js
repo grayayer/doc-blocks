@@ -158,18 +158,40 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
             return select( 'core/editor' ).getCurrentPostId();
         }, [] );
 
-        const { parentId, siblings, currentPageIndex } = useSelect( ( select ) => {
+        const { parentId, siblings, currentPageIndex, isLoading } = useSelect( ( select ) => {
             const page = select( 'core/editor' ).getCurrentPost();
             const parentId = page ? page.parent : 0;
-            const allPages = select( 'core' ).getEntityRecords( 'postType', 'page', { per_page: -1 } ) || [];
+            const allPages = select( 'core' ).getEntityRecords( 'postType', 'page', { per_page: -1 } );
+
+            // Check if pages are still loading
+            const isLoading = select( 'core' ).isResolving( 'getEntityRecords', ['postType', 'page', { per_page: -1 }] );
+
+            if ( isLoading || !allPages ) {
+                return { parentId, siblings: null, currentPageIndex: -1, isLoading };
+            }
+
             const siblings = allPages.filter( p => p.parent === parentId );
             const currentPageIndex = siblings.findIndex( p => p.id === currentPageId );
-            return { parentId, siblings, currentPageIndex };
+            return { parentId, siblings, currentPageIndex, isLoading };
         }, [] );
 
+        // Get the theme's color palette
+        const { colors } = useSelect(select => {
+            return select('core/block-editor').getSettings();
+        }, []);
+
+        // Find a suitable highlight color from the theme's palette
+        const highlightColor = colors.find(color =>
+            color.slug === 'highlight' || color.slug === 'accent'
+        )?.color || '#E0A315'; // Fallback to previous color if not found
+
         const renderNavigation = () => {
-            if ( currentPageIndex === -1 ) {
-                return <p>{ __( 'Unable to determine page position.' ) }</p>;
+            if (isLoading) {
+                return <p>{ __( 'Loading sibling navigation...' ) }</p>;
+            }
+
+            if (!siblings || siblings.length === 0 || currentPageIndex === -1) {
+                return <p>{ __( 'No sibling pages found.' ) }</p>;
             }
 
             const prevSibling = siblings[currentPageIndex - 1];
@@ -236,7 +258,7 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
                             flex-direction: column;
                         }
                         .sibling-navigation-preview a:hover span.meta-nav {
-                            color: #E0A315;
+                                color: var(--global-palette-highlight-alt, #E0A315);
                         }
                         .sibling-navigation-preview a .adjacent-sibling-page-title {
                             transition: 100ms all ease-in-out;
@@ -287,7 +309,12 @@ registerBlockType('page-hierarchy-block/sibling-navigation', {
                     {parentId ? (
                         renderNavigation()
                     ) : (
-                        <p>{ __( 'This page has no parent. Sibling navigation is not applicable.' ) }</p>
+                        <p style={{ color: '#999999' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style={{ width: '1em', height: '1em', marginRight: '0.5em', verticalAlign: 'middle', fill: '#999999' }}>
+                                <path d="M256 32a224 224 0 1 1 0 448 224 224 0 1 1 0-448zm0 480A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM192 352l0 32 16 0 96 0 16 0 0-32-16 0-32 0 0-112 0-16-16 0-40 0-16 0 0 32 16 0 24 0 0 96-32 0-16 0zm88-168l0-48-48 0 0 48 48 0z"/>
+                            </svg>
+                            <em>{ __( 'This page has no parent so the Sibling Navigation block is not applicable.' ) }</em>
+                        </p>
                     )}
                 </div>
             </div>
